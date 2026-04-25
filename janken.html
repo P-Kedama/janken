@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>じゃんけん</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#08090d;
+  --surface:#111219;
+  --border:rgba(255,255,255,0.07);
+  --text:#e8eaf0;
+  --muted:rgba(255,255,255,0.35);
+  --accent:#4f8ef7;
+  --green:#3fb950;
+  --red:#f85149;
+  --yellow:#e3b341;
+  --font-body:'M PLUS Rounded 1c',sans-serif;
+  --font-mono:'DotGothic16',monospace;
+}
+html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var(--font-body);}
+body{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:20px;}
+
+/* ── Card ── */
+.card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:22px;
+  padding:44px 40px;
+  width:100%;
+  max-width:480px;
+  text-align:center;
+  box-shadow:0 24px 64px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.04);
+  animation:fadeUp .38s cubic-bezier(.22,1,.36,1);
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+
+.logo{font-family:var(--font-mono);font-size:10px;letter-spacing:6px;color:rgba(255,255,255,0.15);margin-bottom:36px;text-transform:uppercase;}
+h1{font-size:30px;font-weight:800;margin-bottom:10px;letter-spacing:-.5px;}
+h2{font-size:20px;font-weight:700;margin-bottom:10px;}
+.sub{color:var(--muted);font-size:13px;line-height:1.8;margin-bottom:24px;}
+.sub strong{color:rgba(255,255,255,0.8);}
+
+/* ── Badge ── */
+.badge{
+  display:inline-block;
+  background:rgba(79,142,247,0.12);
+  border:1px solid rgba(79,142,247,0.25);
+  color:var(--accent);
+  font-size:10px;font-weight:700;letter-spacing:3px;
+  padding:4px 14px;border-radius:20px;margin-bottom:22px;
+  font-family:var(--font-mono);
+}
+
+/* ── Inputs ── */
+.inp{
+  width:100%;
+  background:rgba(0,0,0,0.4);
+  border:1.5px solid var(--border);
+  border-radius:12px;
+  color:var(--text);
+  font-size:15px;
+  font-family:var(--font-body);
+  padding:13px 16px;
+  margin-bottom:10px;
+  outline:none;
+  transition:border-color .2s;
+}
+.inp:focus{border-color:rgba(79,142,247,0.5);}
+.inp::placeholder{color:rgba(255,255,255,0.2);}
+
+/* ── Buttons ── */
+.btn{
+  display:block;width:100%;padding:15px;border-radius:13px;border:none;
+  font-size:14px;font-weight:700;cursor:pointer;
+  font-family:var(--font-body);letter-spacing:.5px;margin-top:10px;
+  transition:all .15s;
+}
+.btn-green{background:linear-gradient(135deg,#238636,#2ea043);color:#fff;box-shadow:0 4px 16px rgba(46,160,67,0.22);}
+.btn-green:hover{filter:brightness(1.12);transform:translateY(-1px);}
+.btn-blue{background:linear-gradient(135deg,#1a5db5,#4f8ef7);color:#fff;box-shadow:0 4px 16px rgba(79,142,247,0.22);}
+.btn-blue:hover{filter:brightness(1.12);transform:translateY(-1px);}
+.btn-ghost{background:transparent;border:1.5px solid rgba(255,255,255,0.1);color:var(--muted);}
+.btn-ghost:hover{border-color:rgba(255,255,255,0.25);color:var(--text);}
+.btn-red{background:linear-gradient(135deg,#a31a1a,#cf2020);color:#fff;}
+.btn-red:hover{filter:brightness(1.1);transform:translateY(-1px);}
+
+/* ── Hand buttons ── */
+.hand-row{display:flex;gap:10px;margin:20px 0;}
+.hand-btn{
+  flex:1;background:rgba(255,255,255,0.03);
+  border:1.5px solid rgba(255,255,255,0.07);
+  border-radius:17px;padding:22px 6px 16px;cursor:pointer;
+  transition:all .22s cubic-bezier(.34,1.56,.64,1);
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+}
+.hand-btn:hover{
+  background:rgba(79,142,247,0.09);
+  border-color:rgba(79,142,247,0.45);
+  transform:translateY(-7px) scale(1.05);
+  box-shadow:0 14px 32px rgba(79,142,247,0.18);
+}
+.hand-btn .em{font-size:44px;line-height:1;}
+.hand-btn .lb{font-size:11px;color:var(--muted);font-weight:700;letter-spacing:2px;font-family:var(--font-mono);}
+
+/* ── URL textarea ── */
+.url-area{
+  width:100%;background:rgba(0,0,0,0.5);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:12px;padding:13px 15px;
+  font-size:10.5px;color:rgba(255,255,255,0.5);
+  font-family:var(--font-mono);line-height:1.7;
+  resize:none;outline:none;margin:14px 0 4px;
+  transition:border-color .2s;
+}
+.url-area:focus{border-color:rgba(79,142,247,0.4);}
+.url-hint{font-size:11px;color:rgba(255,255,255,0.2);margin-bottom:14px;}
+
+/* ── Players list ── */
+.players{margin:18px 0;text-align:left;}
+.player-row{
+  display:flex;align-items:center;gap:12px;
+  padding:11px 14px;border-radius:11px;
+  background:rgba(255,255,255,0.03);
+  border:1px solid rgba(255,255,255,0.05);
+  margin-bottom:8px;
+  animation:fadeUp .3s ease;
+}
+.player-row .avatar{
+  width:36px;height:36px;border-radius:50%;
+  background:linear-gradient(135deg,#1a5db5,#4f8ef7);
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;font-weight:800;flex-shrink:0;color:#fff;
+}
+.player-row .pname{font-size:14px;font-weight:700;flex:1;}
+.player-row .pstatus{font-size:11px;font-family:var(--font-mono);color:var(--muted);}
+.player-row.revealed .phand{font-size:28px;}
+
+/* ── Result ── */
+.result-panel{
+  margin:18px 0;padding:22px 18px;border-radius:18px;
+  background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.05);
+}
+.outcome{
+  font-size:32px;font-weight:800;margin-bottom:6px;letter-spacing:-.5px;
+}
+.sep{color:rgba(255,255,255,0.12);font-size:12px;margin:14px 0 4px;letter-spacing:2px;}
+
+/* ── How it works ── */
+.how{
+  margin-top:28px;text-align:left;padding:17px;
+  background:rgba(255,255,255,0.02);border-radius:13px;
+  border:1px solid rgba(255,255,255,0.05);
+}
+.how-title{font-size:9px;color:rgba(255,255,255,0.18);letter-spacing:4px;margin-bottom:12px;font-family:var(--font-mono);text-transform:uppercase;}
+.how-step{display:flex;gap:10px;font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:7px;align-items:flex-start;}
+.how-step .n{color:var(--accent);font-weight:700;flex-shrink:0;font-family:var(--font-mono);}
+
+.err{color:var(--red);font-size:13px;margin-top:10px;}
+.verify{display:inline-flex;align-items:center;gap:6px;font-size:10px;padding:4px 12px;border-radius:20px;font-family:var(--font-mono);}
+.verify-ok{background:rgba(63,185,80,0.1);color:var(--green);border:1px solid rgba(63,185,80,0.2);}
+.verify-ng{background:rgba(248,81,73,0.1);color:var(--red);border:1px solid rgba(248,81,73,0.2);}
+
+.winner-row{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;border-radius:11px;margin-bottom:7px;
+  font-size:14px;font-weight:700;
+}
+.winner-row.win{background:rgba(63,185,80,0.1);border:1px solid rgba(63,185,80,0.2);}
+.winner-row.lose{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);color:var(--muted);}
+.winner-row.draw{background:rgba(227,179,65,0.1);border:1px solid rgba(227,179,65,0.2);}
+
+@media(max-width:480px){
+  .card{padding:32px 22px;}
+  h1{font-size:24px;}
+}
+</style>
+</head>
+<body>
+<div class="card" id="app"></div>
+
+<script>
+// ─── Constants ───────────────────────────────────────────────
+const HANDS = ['rock','scissors','paper'];
+const EMOJI = {rock:'✊',scissors:'✌️',paper:'🖐️'};
+const JP    = {rock:'グー',scissors:'チョキ',paper:'パー'};
+// rock beats scissors, scissors beats paper, paper beats rock
+const BEATS = {rock:'scissors',scissors:'paper',paper:'rock'};
+
+// ─── Crypto helpers ──────────────────────────────────────────
+async function sha256(msg){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(msg));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+function randomNonce(){
+  return Array.from(crypto.getRandomValues(new Uint8Array(16))).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+// ─── URL State ───────────────────────────────────────────────
+// State encoded in URL hash as base64 JSON
+// Shape: { players: [{name, hash, nonce?, hand?}], phase: 'collect'|'reveal' }
+function encodeState(obj){ return btoa(unescape(encodeURIComponent(JSON.stringify(obj)))); }
+function decodeState(str){ try{ return JSON.parse(decodeURIComponent(escape(atob(str)))); }catch{ return null; } }
+function getState(){ const h=location.hash.slice(1); return h ? decodeState(h) : null; }
+function pushState(obj){ location.hash = encodeState(obj); }
+
+// ─── Judge ───────────────────────────────────────────────────
+// Returns { winners:[], losers:[], draw:bool }
+function judgeAll(hands){
+  const unique = [...new Set(hands)];
+  if(unique.length===1 || unique.length===3) return {draw:true, winners:[], losers:[]};
+  // exactly 2 types: stronger one wins
+  const [a,b] = unique;
+  const strongHand = BEATS[a]===b ? a : b;
+  const weakHand   = BEATS[a]===b ? b : a;
+  return {draw:false, strongHand, weakHand};
+}
+
+// ─── Render ──────────────────────────────────────────────────
+const app = document.getElementById('app');
+function render(html){ app.innerHTML = html; app.style.animation='none'; void app.offsetWidth; app.style.animation=''; }
+
+function selectAll(el){ setTimeout(()=>el.select(),50); }
+
+// ─── Screens ─────────────────────────────────────────────────
+
+// HOME: first person sets name + picks hand
+function showHome(){
+  render(`
+    <div class="logo">✊ ✌️ 🖐️ &nbsp; Online Janken</div>
+    <h1>じゃんけん</h1>
+    <p class="sub">名前を入力して手を選ぶとURLが生成されます。<br/>
+    そのURLを順番に参加者に送ってください。<br/>
+    全員が選んだら結果を開封！</p>
+    <input class="inp" id="nameInp" placeholder="あなたの名前" maxlength="12"/>
+    <div class="hand-row" id="handRow"></div>
+    <div id="err"></div>
+    <div class="how">
+      <div class="how-title">How it works</div>
+      <div class="how-step"><span class="n">1</span><span>名前を入力して手を選ぶ → URLが生成される</span></div>
+      <div class="how-step"><span class="n">2</span><span>URLを次の参加者に送る（繰り返す）</span></div>
+      <div class="how-step"><span class="n">3</span><span>最後の人が「開封する」を押す</span></div>
+      <div class="how-step"><span class="n">4</span><span>全員の手と勝敗が一度に判明！</span></div>
+    </div>
+  `);
+  const handRow = document.getElementById('handRow');
+  HANDS.forEach(h=>{
+    const btn = document.createElement('button');
+    btn.className = 'hand-btn';
+    btn.innerHTML = `<span class="em">${EMOJI[h]}</span><span class="lb">${JP[h]}</span>`;
+    btn.onclick = () => commitHand(h);
+    handRow.appendChild(btn);
+  });
+}
+
+// Someone commits their hand
+async function commitHand(hand){
+  const nameInp = document.getElementById('nameInp');
+  const name = nameInp ? nameInp.value.trim() : '';
+  if(!name){ document.getElementById('err').innerHTML='<p class="err">名前を入力してください</p>'; return; }
+
+  const nonce = randomNonce();
+  const hash  = await sha256(nonce + hand);
+  const state = getState() || {players:[], phase:'collect'};
+  // check duplicate name
+  if(state.players.find(p=>p.name===name)){
+    document.getElementById('err').innerHTML='<p class="err">その名前はすでに参加しています</p>'; return;
+  }
+  state.players.push({name, hash, _nonce:nonce, _hand:hand}); // _nonce/_hand stay local only in URL for this player
+  // We store the commitment (hash) for others, but also embed nonce+hand so the originator can reveal
+  // All data lives in the URL — each player's nonce+hand is embedded when they add themselves
+  pushState(state);
+  showShare(state, name, hand);
+}
+
+// SHARE: show URL to pass to next person
+function showShare(state, myName, myHand){
+  const url = location.href;
+  const count = state.players.length;
+  render(`
+    <div class="badge">STEP ${count} 完了</div>
+    <h2>URLを次の人に送ろう</h2>
+    <p class="sub">
+      <strong>${myName}</strong> の手：<strong style="font-size:20px">${EMOJI[myHand]} ${JP[myHand]}</strong><br/>
+      <span style="font-size:11px">ハッシュ化されているので他の人には見えません</span>
+    </p>
+    <div class="players">${state.players.map(p=>`
+      <div class="player-row">
+        <div class="avatar">${p.name[0]}</div>
+        <div class="pname">${p.name}</div>
+        <div class="pstatus">✓ 選択済み</div>
+      </div>`).join('')}
+    </div>
+    <p class="sub" style="font-size:12px;margin-bottom:6px">
+      参加者が揃ったら「開封する」を押してください。<br/>
+      まだ参加者がいる場合はURLを次の人に送ってください。
+    </p>
+    <textarea class="url-area" readonly rows="4" id="urlArea">${url}</textarea>
+    <p class="url-hint">↑ クリックで全選択 → コピーしてください</p>
+    <button class="btn btn-red" onclick="showReveal()">🎉 開封する（全員揃った）</button>
+    <button class="btn btn-ghost" onclick="showJoin()">次の参加者として手を出す</button>
+  `);
+  document.getElementById('urlArea').onclick = function(){ selectAll(this); };
+  document.getElementById('urlArea').onfocus = function(){ selectAll(this); };
+}
+
+// JOIN: another person adds their hand
+function showJoin(){
+  const state = getState();
+  if(!state){ showHome(); return; }
+  render(`
+    <div class="badge">参加する</div>
+    <h2>あなたの手を選んでください</h2>
+    <p class="sub">
+      すでに <strong>${state.players.length}人</strong> が選択済みです。<br/>
+      名前を入力して手を選んでください。
+    </p>
+    <div class="players">${state.players.map(p=>`
+      <div class="player-row">
+        <div class="avatar">${p.name[0]}</div>
+        <div class="pname">${p.name}</div>
+        <div class="pstatus">✓ 選択済み</div>
+      </div>`).join('')}
+    </div>
+    <input class="inp" id="nameInp" placeholder="あなたの名前" maxlength="12"/>
+    <div class="hand-row" id="handRow"></div>
+    <div id="err"></div>
+  `);
+  const handRow = document.getElementById('handRow');
+  HANDS.forEach(h=>{
+    const btn = document.createElement('button');
+    btn.className = 'hand-btn';
+    btn.innerHTML = `<span class="em">${EMOJI[h]}</span><span class="lb">${JP[h]}</span>`;
+    btn.onclick = () => commitHand(h);
+    handRow.appendChild(btn);
+  });
+}
+
+// REVEAL: open all hands and show result
+async function showReveal(){
+  const state = getState();
+  if(!state || state.players.length < 2){
+    alert('参加者が2人以上必要です'); return;
+  }
+
+  // Verify all hashes and collect hands
+  let allOk = true;
+  const verified = [];
+  for(const p of state.players){
+    if(!p._nonce || !p._hand){ allOk=false; verified.push({...p, ok:false}); continue; }
+    const expected = await sha256(p._nonce + p._hand);
+    const ok = expected === p.hash;
+    if(!ok) allOk = false;
+    verified.push({...p, ok});
+  }
+
+  const hands = verified.map(p=>p._hand).filter(Boolean);
+  const judged = hands.length === verified.length ? judgeAll(hands) : null;
+
+  // Build result rows
+  let resultRows = '';
+  for(const p of verified){
+    let cls = 'lose', label = '';
+    if(!judged){ cls='draw'; }
+    else if(judged.draw){ cls='draw'; label='🤝'; }
+    else if(p._hand === judged.strongHand){ cls='win'; label='🏆 勝ち'; }
+    else { cls='lose'; label='負け'; }
+
+    resultRows += `
+      <div class="winner-row ${cls}">
+        <span style="font-size:28px">${p._hand ? EMOJI[p._hand] : '❓'}</span>
+        <span style="flex:1;font-size:14px;font-weight:700">${p.name}</span>
+        <span style="font-size:13px">${p._hand ? JP[p._hand] : '不明'}</span>
+        <span style="font-size:13px;margin-left:8px">${label}</span>
+      </div>`;
+  }
+
+  let outcomeText = '', outcomeColor = '';
+  if(!judged){ outcomeText='❓ データ不足'; outcomeColor='var(--muted)'; }
+  else if(judged.draw){ outcomeText='🤝 あいこ！'; outcomeColor='var(--yellow)'; }
+  else { outcomeText=`${EMOJI[judged.strongHand]} ${JP[judged.strongHand]} の勝ち！`; outcomeColor='var(--green)'; }
+
+  render(`
+    <div class="badge">RESULT</div>
+    <div class="outcome" style="color:${outcomeColor}">${outcomeText}</div>
+    <div class="result-panel">
+      ${resultRows}
+      <div style="margin-top:14px">
+        <span class="verify ${allOk?'verify-ok':'verify-ng'}">
+          ${allOk ? '✓ 全員のハッシュ検証OK・不正なし' : '⚠ 一部の検証に失敗しました'}
+        </span>
+      </div>
+    </div>
+    <button class="btn btn-blue" onclick="shareResult()">📤 結果URLを全員に共有</button>
+    <button class="btn btn-ghost" onclick="resetGame()">もう一度やる</button>
+  `);
+
+  // Embed reveal flag so others can see result too
+  state.phase = 'reveal';
+  pushState(state);
+}
+
+function shareResult(){
+  const url = location.href;
+  const area = document.createElement('textarea');
+  area.className = 'url-area';
+  area.readOnly = true;
+  area.rows = 4;
+  area.value = url;
+  area.onclick = function(){ selectAll(this); };
+  area.onfocus = function(){ selectAll(this); };
+  const hint = document.createElement('p');
+  hint.className = 'url-hint';
+  hint.textContent = '↑ クリックで全選択 → コピーしてください';
+  app.appendChild(area);
+  app.appendChild(hint);
+  area.focus(); selectAll(area);
+}
+
+function resetGame(){
+  location.hash = '';
+  location.reload();
+}
+
+// ─── Router ──────────────────────────────────────────────────
+function init(){
+  const state = getState();
+  if(!state){
+    showHome();
+  } else if(state.phase === 'reveal'){
+    showReveal();
+  } else {
+    // Someone received a collect URL — they join
+    showJoin();
+  }
+}
+
+init();
+</script>
+</body>
+</html>
