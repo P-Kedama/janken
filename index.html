@@ -359,15 +359,8 @@ async function doShare(originalUrl, label, btn){
   }catch{}
   if(btn){btn.disabled=false;btn.textContent=label;}
   if(navigator.share){
-    try{await navigator.share({title:'じゃんけんしよう！',text:'じゃんけんに参加してください👊',url});return;}catch{}
+    try{await navigator.share({title:'じゃんけんしよう！',text:'じゃんけんに参加してください👊',url});}catch{}
   }
-  // fallback: クリップボード or テキストエリア表示
-  const area=document.getElementById('urlArea')||document.getElementById('resultArea');
-  if(area){area.value=url;area.style.display='block';selectAll(area);}
-  try{
-    await navigator.clipboard.writeText(url);
-    if(btn){btn.textContent='✓ コピーしました！';setTimeout(()=>{btn.textContent=label;},2000);}
-  }catch{}
 }
 
 function resetGame(){location.hash='';location.reload();}
