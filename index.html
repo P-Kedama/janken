@@ -299,8 +299,9 @@ function showShare(state, myName, myHand){
       まだ参加者がいる場合はURLを次の人に送ってください。
     </p>
     <textarea class="url-area" readonly rows="4" id="urlArea">${url}</textarea>
-    <p class="url-hint">↑ クリックで全選択 → コピーしてください</p>
-    <button class="btn btn-red" onclick="showReveal()">🎉 開封する（全員揃った）</button>
+    <button class="btn btn-blue" onclick="copyUrl('urlArea',this)">📋 URLをコピー</button>
+    <button class="btn btn-ghost" onclick="shortenUrl('urlArea',this)">🔗 短縮URLを作る</button>
+    <button class="btn btn-red" onclick="showReveal()" style="margin-top:18px">🎉 開封する（全員揃った）</button>
     <button class="btn btn-ghost" onclick="showJoin()">次の参加者として手を出す</button>
   `);
   document.getElementById('urlArea').onclick = function(){ selectAll(this); };
@@ -405,24 +406,60 @@ async function showReveal(){
 
 function shareResult(){
   const url = location.href;
-  const area = document.createElement('textarea');
-  area.className = 'url-area';
-  area.readOnly = true;
-  area.rows = 4;
-  area.value = url;
+  const wrap = document.createElement('div');
+  wrap.innerHTML = `
+    <textarea class="url-area" readonly rows="4" id="resultArea">${url}</textarea>
+    <button class="btn btn-blue" onclick="copyUrl('resultArea',this)" style="margin-top:6px">📋 URLをコピー</button>
+    <button class="btn btn-ghost" onclick="shortenUrl('resultArea',this)">🔗 短縮URLを作る</button>
+  `;
+  app.appendChild(wrap);
+  const area = document.getElementById('resultArea');
   area.onclick = function(){ selectAll(this); };
-  area.onfocus = function(){ selectAll(this); };
-  const hint = document.createElement('p');
-  hint.className = 'url-hint';
-  hint.textContent = '↑ クリックで全選択 → コピーしてください';
-  app.appendChild(area);
-  app.appendChild(hint);
   area.focus(); selectAll(area);
 }
 
 function resetGame(){
   location.hash = '';
   location.reload();
+}
+
+// ─── URL helpers ─────────────────────────────────────────────
+function selectAll(el){ setTimeout(()=>el.select(),50); }
+
+async function copyUrl(areaId, btn){
+  const area = document.getElementById(areaId);
+  if(!area) return;
+  try {
+    await navigator.clipboard.writeText(area.value);
+    btn.textContent = '✓ コピーしました！';
+    setTimeout(()=>{ btn.textContent = '📋 URLをコピー'; }, 2000);
+  } catch {
+    selectAll(area);
+    btn.textContent = '↑ 手動でコピーしてください';
+    setTimeout(()=>{ btn.textContent = '📋 URLをコピー'; }, 2000);
+  }
+}
+
+async function shortenUrl(areaId, btn){
+  const area = document.getElementById(areaId);
+  if(!area) return;
+  const original = area.value;
+  btn.textContent = '⏳ 短縮中...';
+  btn.disabled = true;
+  try {
+    const res = await fetch(`https://is.gd/create.php?format=json&url=${encodeURIComponent(original)}`);
+    const data = await res.json();
+    if(data.shorturl){
+      area.value = data.shorturl;
+      btn.textContent = '✓ 短縮完了！';
+      try { await navigator.clipboard.writeText(data.shorturl); btn.textContent = '✓ 短縮＆コピー完了！'; } catch {}
+      setTimeout(()=>{ btn.textContent = '🔗 短縮URLを作る'; btn.disabled = false; }, 3000);
+    } else { throw new Error(); }
+  } catch {
+    btn.textContent = '❌ 失敗 → 手動でコピーしてください';
+    btn.disabled = false;
+    selectAll(area);
+  }
 }
 
 // ─── Router ──────────────────────────────────────────────────
