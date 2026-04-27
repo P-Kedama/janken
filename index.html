@@ -87,6 +87,8 @@ h2{font-size:20px;font-weight:700;margin-bottom:10px;}
 .btn-ghost:hover{border-color:rgba(255,255,255,0.25);color:var(--text);}
 .btn-red{background:linear-gradient(135deg,#a31a1a,#cf2020);color:#fff;}
 .btn-red:hover{filter:brightness(1.1);transform:translateY(-1px);}
+.btn-shorten{background:linear-gradient(135deg,#b45309,#f59e0b);color:#fff;font-size:16px;padding:17px;box-shadow:0 4px 20px rgba(245,158,11,0.4);}
+.btn-shorten:hover{filter:brightness(1.12);transform:translateY(-2px);box-shadow:0 8px 28px rgba(245,158,11,0.5);}
 
 /* ── Hand buttons ── */
 .hand-row{display:flex;gap:10px;margin:20px 0;}
@@ -282,7 +284,7 @@ function showShare(state, myName, myHand){
   const count = state.players.length;
   render(`
     <div class="badge">STEP ${count} 完了</div>
-    <h2>URLを次の人に送ろう</h2>
+    <h2>次の人に送ろう！</h2>
     <p class="sub">
       <strong>${myName}</strong> の手：<strong style="font-size:20px">${EMOJI[myHand]} ${JP[myHand]}</strong><br/>
       <span style="font-size:11px">ハッシュ化されているので他の人には見えません</span>
@@ -294,18 +296,16 @@ function showShare(state, myName, myHand){
         <div class="pstatus">✓ 選択済み</div>
       </div>`).join('')}
     </div>
-    <p class="sub" style="font-size:12px;margin-bottom:6px">
-      参加者が揃ったら「開封する」を押してください。<br/>
-      まだ参加者がいる場合はURLを次の人に送ってください。
-    </p>
-    <textarea class="url-area" readonly rows="4" id="urlArea">${url}</textarea>
-    <button class="btn btn-blue" onclick="copyUrl('urlArea',this)">📋 URLをコピー</button>
-    <button class="btn btn-ghost" onclick="shortenUrl('urlArea',this)">🔗 短縮URLを作る</button>
-    <button class="btn btn-red" onclick="showReveal()" style="margin-top:18px">🎉 開封する（全員揃った）</button>
+    <textarea class="url-area" readonly rows="3" id="urlArea" style="display:none">${url}</textarea>
+    <button class="btn btn-shorten" id="shareBtn" onclick="shortenAndShare('urlArea',this)">📤 次の人に送る</button>
+    <button class="btn btn-red" onclick="showReveal()" style="margin-top:14px">🎉 開封する（全員揃った）</button>
     <button class="btn btn-ghost" onclick="showJoin()">次の参加者として手を出す</button>
   `);
-  document.getElementById('urlArea').onclick = function(){ selectAll(this); };
-  document.getElementById('urlArea').onfocus = function(){ selectAll(this); };
+  // Auto-trigger share on load
+  setTimeout(()=>{
+    const btn = document.getElementById('shareBtn');
+    if(btn) btn.click();
+  }, 300);
 }
 
 // JOIN: another person adds their hand
@@ -409,8 +409,7 @@ function shareResult(){
   const wrap = document.createElement('div');
   wrap.innerHTML = `
     <textarea class="url-area" readonly rows="4" id="resultArea">${url}</textarea>
-    <button class="btn btn-blue" onclick="copyUrl('resultArea',this)" style="margin-top:6px">📋 URLをコピー</button>
-    <button class="btn btn-ghost" onclick="shortenUrl('resultArea',this)">🔗 短縮URLを作る</button>
+    <button class="btn btn-shorten" onclick="shortenAndShare('resultArea',this)" style="margin-top:6px">🔗 短縮URL生成＆共有</button>
   `;
   app.appendChild(wrap);
   const area = document.getElementById('resultArea');
@@ -440,25 +439,36 @@ async function copyUrl(areaId, btn){
   }
 }
 
-async function shortenUrl(areaId, btn){
+async function shortenAndShare(areaId, btn){
   const area = document.getElementById(areaId);
   if(!area) return;
   const original = area.value;
   btn.textContent = '⏳ 短縮中...';
   btn.disabled = true;
+  let url = original;
   try {
     const res = await fetch(`https://is.gd/create.php?format=json&url=${encodeURIComponent(original)}`);
     const data = await res.json();
-    if(data.shorturl){
-      area.value = data.shorturl;
-      btn.textContent = '✓ 短縮完了！';
-      try { await navigator.clipboard.writeText(data.shorturl); btn.textContent = '✓ 短縮＆コピー完了！'; } catch {}
-      setTimeout(()=>{ btn.textContent = '🔗 短縮URLを作る'; btn.disabled = false; }, 3000);
-    } else { throw new Error(); }
+    if(data.shorturl){ url = data.shorturl; area.value = data.shorturl; }
+  } catch {}
+  btn.disabled = false;
+  btn.textContent = '📤 次の人に送る';
+  // Web Share API
+  if(navigator.share){
+    try {
+      await navigator.share({ title:'じゃんけんしよう！', text:'じゃんけんに参加してください👊', url });
+      return;
+    } catch {}
+  }
+  // fallback: URLを表示してコピー
+  area.style.display = 'block';
+  selectAll(area);
+  try {
+    await navigator.clipboard.writeText(url);
+    btn.textContent = '✓ コピーしました！';
+    setTimeout(()=>{ btn.textContent = '📤 次の人に送る'; }, 2000);
   } catch {
-    btn.textContent = '❌ 失敗 → 手動でコピーしてください';
-    btn.disabled = false;
-    selectAll(area);
+    btn.textContent = '↑ URLをコピーしてください';
   }
 }
 
